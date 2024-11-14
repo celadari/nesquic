@@ -20,7 +20,7 @@ pub fn configure_server() -> Result<(ServerConfig, Vec<u8>), Box<dyn Error>> {
         .with_single_cert(cert_chain.clone(), priv_key.clone())?;
     
     // Set ALPN protocols - adjust these values based on your needs
-    server_crypto.alpn_protocols = vec![b"jamnp-s/0/H".to_vec()];
+    server_crypto.alpn_protocols = vec![b"jamnp-s/0/00000000".to_vec()];
 
     let mut server_config = ServerConfig::with_crypto(Arc::new(server_crypto));
     let transport_config = Arc::get_mut(&mut server_config.transport).unwrap();
@@ -55,13 +55,17 @@ impl rustls::client::ServerCertVerifier for SkipServerVerification {
 }
 
 pub fn configure_client() -> ClientConfig {
-    let crypto = rustls::ClientConfig::builder()
+    let mut crypto = rustls::ClientConfig::builder()
         .with_safe_defaults()
         .with_custom_certificate_verifier(SkipServerVerification::new())
         .with_no_client_auth();
-    // Set timeout to 5min
+   
+    // Set ALPN protocols for client - should match server's protocols
+    crypto.alpn_protocols = vec![b"jamnp-s/0/00000000".to_vec()];
+    
     let mut transport_config = TransportConfig::default();
     transport_config.max_idle_timeout(Some(Duration::from_secs(5 * 60).try_into().unwrap()));
+    
     let mut client_config = ClientConfig::new(Arc::new(crypto));
     client_config.transport_config(transport_config.into());
 
