@@ -101,7 +101,7 @@ async fn accept_conn(endpoint: &Endpoint) -> (SendStream, RecvStream) {
         }
         Ok(s) => s,
     };
-    debug!("[server] bidirecional stream opened");
+    println!("[server] bidirecional stream opened");
     stream
 }
 
@@ -117,7 +117,15 @@ async fn recv_data(mut recv: RecvStream) -> Result<(), ()> {
                 return Err(());
             }
             Ok(Some(chunk)) => {
-                debug!("received {} bytes", chunk.bytes.len());
+                println!("received {} bytes", chunk.bytes.len());
+                match std::str::from_utf8(&chunk.bytes) {
+                    Ok(text) => {
+                        println!("Received text: {}", text);
+                    }
+                    Err(_) => {
+                        println!("Received (non-UTF-8) bytes: {:?}", chunk.bytes);
+                    }
+                }
                 let _ = stdout.write_all(&chunk.bytes);
                 // continue reading
             }
@@ -170,7 +178,7 @@ async fn run_server(addr: SocketAddr) {
     // accept connection from client
     loop {
         let (send, recv) = accept_conn(&endpoint).await;
-        info!("[server] connection accepted");
+        println!("[server] connection accepted");
         let _ = tokio::spawn(recv_data(recv));
         let _ = send_data(send).await;
         break; // TODO: remove this for multiple connections (maybe a flag?)

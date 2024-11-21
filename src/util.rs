@@ -18,7 +18,7 @@ pub fn configure_server() -> Result<(ServerConfig, Vec<u8>), Box<dyn Error>> {
         .with_safe_defaults()
         .with_no_client_auth()
         .with_single_cert(cert_chain.clone(), priv_key.clone())?;
-    
+
     // Set ALPN protocols - adjust these values based on your needs
     server_crypto.alpn_protocols = vec![b"jamnp-s/0/00000000".to_vec()];
 
